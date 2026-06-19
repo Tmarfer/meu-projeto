@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curso Microsoft Fabric — TCU</title>
+<style>
+  :root {
+    --fabric-purple: #7B2FBE;
+    --fabric-blue: #0078D4;
+    --fabric-teal: #00B4D8;
+    --fabric-dark: #1A1A2E;
+    --fabric-mid: #16213E;
+    --fabric-surface: #0F3460;
+    --accent-gold: #E94560;
+    --sidebar-w: 280px;
+    --yellow: #F59E0B;
+    --blue-card: #3B82F6;
+    --red-card: #EF4444;
+    --green: #10B981;
+    --text-light: #E2E8F0;
+    --text-muted: #94A3B8;
+    --card-bg: rgba(255,255,255,0.05);
+    --card-border: rgba(255,255,255,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--fabric-dark);
+    color: var(--text-light);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: linear-gradient(180deg, var(--fabric-mid) 0%, var(--fabric-dark) 100%);
+    border-right: 1px solid var(--card-border);
+    position: fixed;
+    top: 0; left: 0;
+    overflow-y: auto;
+    z-index: 100;
+    transition: transform 0.3s;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  }
+  .sidebar-logo .icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--fabric-purple), var(--fabric-blue));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .sidebar-logo h2 {
+    font-size: 16px; font-weight: 700;
+    background: linear-gradient(90deg, #A78BFA, #60A5FA);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .sidebar-subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px; text-transform: uppercase; }
+
+  .progress-section { padding: 14px 20px; border-bottom: 1px solid var(--card-border); }
+  .progress-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--fabric-purple), var(--fabric-teal)); border-radius: 2px; transition: width 0.4s; }
+
+  .nav-group { padding: 12px 0; }
+  .nav-group-label {
+    font-size: 10px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    padding: 0 20px 8px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 20px; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    font-size: 13px; color: var(--text-muted);
+    border-left: 3px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-light); }
+  .nav-item.active {
+    background: rgba(123,47,190,0.15);
+    color: #A78BFA;
+    border-left-color: var(--fabric-purple);
+  }
+  .nav-item .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+  .nav-item .nav-badge {
+    margin-left: auto; font-size: 10px; background: rgba(123,47,190,0.3);
+    color: #A78BFA; padding: 2px 6px; border-radius: 10px;
+  }
+  .nav-item.done .nav-check { color: var(--green); font-size: 12px; margin-left: auto; }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  #topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(26,26,46,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 14px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-breadcrumb { font-size: 13px; color: var(--text-muted); }
+  .topbar-breadcrumb span { color: var(--text-light); font-weight: 500; }
+  .topbar-date {
+    font-size: 12px; color: var(--text-muted);
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    padding: 4px 12px; border-radius: 20px;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .section-hero {
+    padding: 48px 40px 32px;
+    background: linear-gradient(135deg, rgba(123,47,190,0.15) 0%, rgba(0,120,212,0.1) 100%);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .day-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(123,47,190,0.2); border: 1px solid rgba(123,47,190,0.4);
+    color: #A78BFA; font-size: 11px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .section-hero h1 { font-size: 28px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+  .section-hero p { font-size: 15px; color: var(--text-muted); max-width: 700px; line-height: 1.7; }
+
+  .meta-pills { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .meta-pill {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--text-muted);
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    padding: 4px 12px; border-radius: 20px;
+  }
+  .meta-pill strong { color: var(--text-light); }
+
+  .content-area { padding: 32px 40px; max-width: 900px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .card-header h3 { font-size: 15px; font-weight: 600; }
+  .card-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+  }
+  .card-icon.yellow { background: rgba(245,158,11,0.15); }
+  .card-icon.blue { background: rgba(59,130,246,0.15); }
+  .card-icon.red { background: rgba(239,68,68,0.15); }
+  .card-icon.green { background: rgba(16,185,129,0.15); }
+  .card-icon.purple { background: rgba(123,47,190,0.15); }
+
+  /* ── ALERTS ── */
+  .alert {
+    border-radius: 8px; padding: 12px 16px; margin-bottom: 12px;
+    display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.6;
+  }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .alert.yellow { background: rgba(245,158,11,0.08); border-left: 3px solid var(--yellow); }
+  .alert.blue { background: rgba(59,130,246,0.08); border-left: 3px solid var(--blue-card); }
+  .alert.red { background: rgba(239,68,68,0.08); border-left: 3px solid var(--red-card); }
+  .alert.green { background: rgba(16,185,129,0.08); border-left: 3px solid var(--green); }
+  .alert strong { color: var(--text-light); display: block; margin-bottom: 2px; }
+  .alert p { color: var(--text-muted); }
+
+  /* ── CONCEPT GRID ── */
+  .concept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .concept-item {
+    background: rgba(255,255,255,0.03); border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 14px;
+  }
+  .concept-item .concept-term {
+    font-size: 13px; font-weight: 600; color: #A78BFA; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .concept-item p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── COMPARISON TABLE ── */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .compare-table th {
+    background: rgba(123,47,190,0.15); color: #A78BFA;
+    padding: 10px 14px; text-align: left; font-weight: 600;
+    border: 1px solid var(--card-border);
+  }
+  .compare-table td {
+    padding: 10px 14px; border: 1px solid var(--card-border);
+    color: var(--text-muted); vertical-align: top;
+  }
+  .compare-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .tag {
+    display: inline-flex; align-items: center;
+    font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600;
+  }
+  .tag.green { background: rgba(16,185,129,0.15); color: #34D399; }
+  .tag.red { background: rgba(239,68,68,0.15); color: #F87171; }
+  .tag.yellow { background: rgba(245,158,11,0.15); color: #FCD34D; }
+  .tag.blue { background: rgba(59,130,246,0.15); color: #93C5FD; }
+  .tag.purple { background: rgba(123,47,190,0.15); color: #A78BFA; }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; }
+  .checklist li {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px; color: var(--text-muted);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: ''; width: 16px; height: 16px; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.2); border-radius: 4px; margin-top: 2px;
+  }
+
+  /* ── STEPS ── */
+  .steps { list-style: none; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px; color: var(--text-muted); line-height: 1.7;
+  }
+  .steps li::before {
+    content: counter(step);
+    min-width: 24px; height: 24px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--fabric-purple), var(--fabric-blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; margin-top: 1px;
+  }
+  .steps li strong { color: var(--text-light); }
+
+  /* ── SEPARATOR ── */
+  .separator { border: none; border-top: 1px solid var(--card-border); margin: 24px 0; }
+
+  /* ── ARCH DIAGRAM ── */
+  .arch-diagram {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--card-border);
+    border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 20px;
+  }
+  .arch-row { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+  .arch-box {
+    background: rgba(123,47,190,0.15); border: 1px solid rgba(123,47,190,0.3);
+    border-radius: 8px; padding: 10px 16px; font-size: 12px; font-weight: 600; color: #A78BFA;
+    min-width: 110px; text-align: center;
+  }
+  .arch-box.blue { background: rgba(0,120,212,0.15); border-color: rgba(0,120,212,0.3); color: #60A5FA; }
+  .arch-box.teal { background: rgba(0,180,216,0.15); border-color: rgba(0,180,216,0.3); color: #22D3EE; }
+  .arch-box.green { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); color: #34D399; }
+  .arch-box.yellow { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3); color: #FCD34D; }
+  .arch-arrow { font-size: 18px; color: var(--text-muted); padding: 0 8px; }
+  .arch-label { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+  /* ── ROADMAP ── */
+  .roadmap { position: relative; padding-left: 28px; }
+  .roadmap::before {
+    content: ''; position: absolute; left: 7px; top: 0; bottom: 0;
+    width: 2px; background: linear-gradient(180deg, var(--fabric-purple), var(--fabric-blue), var(--fabric-teal));
+  }
+  .roadmap-item { position: relative; margin-bottom: 20px; }
+  .roadmap-item::before {
+    content: ''; position: absolute; left: -24px; top: 4px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--fabric-purple); border: 2px solid var(--fabric-dark);
+  }
+  .roadmap-item h4 { font-size: 13px; font-weight: 600; color: #A78BFA; margin-bottom: 4px; }
+  .roadmap-item p { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── SECTION NAV ── */
+  .section-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 40px; border-top: 1px solid var(--card-border);
+    margin-top: 20px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; transition: all 0.2s; text-decoration: none;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--fabric-purple), var(--fabric-blue));
+    color: white;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-ghost {
+    background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-muted);
+  }
+  .btn-ghost:hover { color: var(--text-light); background: rgba(255,255,255,0.08); }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(123,47,190,0.1), rgba(0,120,212,0.1));
+    border: 1px solid rgba(123,47,190,0.3);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;
+    font-size: 13px; line-height: 1.7; color: var(--text-muted);
+  }
+  .highlight-box strong { color: #A78BFA; }
+
+  /* ── MOBILE ── */
+  .menu-toggle {
+    display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+    background: var(--fabric-purple); color: white;
+    border: none; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 18px;
+  }
+  @media (max-width: 768px) {
+    .menu-toggle { display: block; }
+    #sidebar { transform: translateX(-100%); }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0; }
+    .concept-grid { grid-template-columns: 1fr; }
+    .section-hero { padding: 48px 20px 24px; }
+    .content-area { padding: 20px; }
+    .section-nav { padding: 16px 20px; }
+    #topbar { padding: 14px 20px; }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+  code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: rgba(255,255,255,0.07); border: 1px solid var(--card-border);
+    padding: 1px 6px; border-radius: 4px; font-size: 12px; color: #93C5FD;
+  }
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <div class="icon">⬡</div>
+      <h2>Microsoft Fabric</h2>
+    </div>
+    <div class="sidebar-subtitle">Treinamento TCU · Jun 2026</div>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-label">
+      <span>Progresso do Curso</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Dia 1 · 16 jun</div>
+    <div class="nav-item active" onclick="goTo('s1', this)">
+      <span class="nav-icon">🚀</span>
+      Introdução ao Fabric
+      <span class="nav-badge">Módulo 1</span>
+    </div>
+    <div class="nav-item" onclick="goTo('s2', this)">
+      <span class="nav-icon">🏗️</span>
+      Workspaces e Arquitetura
+      <span class="nav-badge">Módulo 2</span>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Dia 2 · 17 jun</div>
+    <div class="nav-item" onclick="goTo('s3', this)">
+      <span class="nav-icon">💾</span>
+      Tipos de Armazenamento
+      <span class="nav-badge">Módulo 3</span>
+    </div>
+    <div class="nav-item" onclick="goTo('s4', this)">
+      <span class="nav-icon">🔀</span>
+      Lake House, Warehouse e SQL DB
+      <span class="nav-badge">Módulo 4</span>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Dia 3 · 18 jun</div>
+    <div class="nav-item" onclick="goTo('s5', this)">
+      <span class="nav-icon">🔍</span>
+      Consultas e Integração
+      <span class="nav-badge">Módulo 5</span>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Referências</div>
+    <div class="nav-item" onclick="goTo('s6', this)">
+      <span class="nav-icon">📚</span>
+      Resumo Geral
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main id="main">
+  <div id="topbar">
+    <div class="topbar-breadcrumb">
+      Treinamento Microsoft Fabric · <span id="current-section-name">Módulo 1</span>
+    </div>
+    <div class="topbar-date">📅 <strong>16–18 junho 2026</strong> · Prof. Eduardo</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MÓDULO 1 · INTRODUÇÃO AO MICROSOFT FABRIC
+  ══════════════════════════════════════════════ -->
+  <div id="s1" class="section active">
+    <div class="section-hero">
+      <div class="day-badge">📅 Dia 1 · 16 de junho de 2026 · 08h37</div>
+      <h1>Introdução ao Microsoft Fabric</h1>
+      <p>Visão geral da plataforma unificada da Microsoft para análise de dados — o que é, o que não é, e como ela se posiciona como ferramenta oficial do TCU.</p>
+      <div class="meta-pills">
+        <div class="meta-pill">👨‍🏫 Prof. <strong>Eduardo</strong></div>
+        <div class="meta-pill">⏱️ Módulo <strong>1</strong> de 5</div>
+        <div class="meta-pill">🏷️ Introdução &amp; Visão Geral</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- O que é -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">🌐</div>
+          <h3>O que é o Microsoft Fabric?</h3>
+        </div>
+        <div class="highlight-box">
+          O Fabric é uma <strong>plataforma unificada</strong> — um "guarda-chuva" ou "canivete suíço" — que consolida diversas soluções de análise de dados da Microsoft que antes eram isoladas: Data Factory, Power BI, Azure Synapse, etc.
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">ℹ️</span>
+          <div><strong>Relação com o Power BI</strong>
+          <p>O Power BI é parte do Fabric. Ao clicar no ícone do Power BI no canto inferior esquerdo, você alterna para a interface Fabric. Muitos usuários já usavam o Fabric há cerca de 3 anos sem perceber.</p></div>
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">✅</span>
+          <div><strong>Ferramenta oficial do TCU</strong>
+          <p>O Fabric é a plataforma oficial de análise de dados do TCU, escolhida com base no Quadrante Mágico do Gartner, compatibilidade 100% com Management Studio e custo-benefício.</p></div>
+        </div>
+      </div>
+
+      <!-- Três Pilares -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">⬡</div>
+          <h3>Os Três Pilares Estruturantes do Fabric</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">☁️ OneLake</div>
+            <p>Storage em nuvem dedicado a dados analíticos (estruturados e não estruturados), análogo ao OneDrive, com espaço ilimitado compartilhado por todos os usuários do Fabric.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">⚡ SQL + Spark</div>
+            <p>O Fabric suporta ambas as linguagens. Spark é recomendado por ser mais rápido, eficiente e distribuído, mas o SQL continua totalmente compatível.</p>
+          </div>
+          <div class="concept-item" style="grid-column: 1 / -1;">
+            <div class="concept-term">📄 Formato Delta Parquet</div>
+            <p>Padrão aberto (não proprietário) para armazenamento de dados. Diferente do formato binário do SQL Server ou Oracle, permite que arquivos sejam lidos fora do Fabric por qualquer software compatível.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- O que NÃO é -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">🚫</div>
+          <h3>O que o Fabric NÃO é</h3>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>Não é um servidor de aplicação</strong>
+          <p>Não foi projetado para publicar aplicações com interface visual para entrada de dados (ex.: substituir Apex para cadastros ou Kubernetes para publicação de apps com front-end). Exceção: <em>Fabric Apps</em> (lançado em preview junho/2025) pode cobrir casos de entrada de dados.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>Não é sinônimo de LabContas</strong>
+          <p>O LabContas roda <em>dentro</em> do Fabric, mas o Fabric é muito mais amplo. E-Dados e EPP também devem migrar para ele no futuro.</p></div>
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">✅</span>
+          <div><strong>O Fabric substitui o Kubernetes para ETL</strong>
+          <p>Quando o Kubernetes é usado apenas para ETL ou análise de dados em Python (sem interface visual), o Fabric é o substituto adequado.</p></div>
+        </div>
+      </div>
+
+      <!-- Fabric vs Databricks -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon blue">⚖️</div>
+          <h3>Fabric vs Databricks</h3>
+        </div>
+        <table class="compare-table">
+          <tr>
+            <th>Critério</th>
+            <th>Microsoft Fabric</th>
+            <th>Databricks</th>
+          </tr>
+          <tr>
+            <td>Propósito</td>
+            <td>Plataforma unificada de analytics</td>
+            <td>Especializado em Spark pesado</td>
+          </tr>
+          <tr>
+            <td>Uso no TCU</td>
+            <td>Análise, notebooks, Power BI, LabContas</td>
+            <td>ETLs pesados do CEPIM e EPP</td>
+          </tr>
+          <tr>
+            <td>Custo</td>
+            <td>R$ 48 mil/mês (F64)</td>
+            <td>Mais barato para cargas intensas</td>
+          </tr>
+          <tr>
+            <td>Código</td>
+            <td>Mesmo PySpark</td>
+            <td>Mesmo PySpark — código portável</td>
+          </tr>
+          <tr>
+            <td>Storage</td>
+            <td>OneLake</td>
+            <td>Storage Azure → acessa via Fabric</td>
+          </tr>
+        </table>
+        <div class="alert yellow" style="margin-top:12px">
+          <span class="alert-icon">💡</span>
+          <div><strong>Regra prática</strong>
+          <p>A escolha entre Fabric e Databricks é baseada em análise de custo. ETLs muito pesados que sobrecarregariam a capacidade do Fabric vão para Databricks — ex.: auditoria com ~1TB roda direto no Fabric; ETLs da Receita Federal vão para Databricks.</p></div>
+        </div>
+      </div>
+
+      <!-- Roadmap -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon teal">🗺️</div>
+          <h3>Roadmap de Migração para a Nuvem</h3>
+        </div>
+        <div class="roadmap">
+          <div class="roadmap-item">
+            <h4>Situação Atual</h4>
+            <p>Dado carregado no SQL Server on-premises → copiado para a nuvem (Fabric) → transformado em Parquet → disponibilizado para análise.</p>
+          </div>
+          <div class="roadmap-item">
+            <h4>Próxima Fase (~1,5 ano)</h4>
+            <p>Dado entrará diretamente na nuvem. Uma cópia será espelhada para o SQL Server on-premises durante o período de transição.</p>
+          </div>
+          <div class="roadmap-item">
+            <h4>Estado Final</h4>
+            <p>SQL Server on-premises e PowerCenter serão desligados. Única URL de conexão válida será a do Fabric na nuvem.</p>
+          </div>
+          <div class="roadmap-item">
+            <h4>E-Dados (Oracle) — Caso Especial</h4>
+            <p>Não pode ser totalmente substituído ainda pois aplicações Apex dependem dele. Arquitetura futura: Databricks lê dado de produção → salva em Parquet no Fabric → exporta para instância Oracle para consumo pelo Apex.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segurança -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">🔐</div>
+          <h3>Segurança e Autenticação</h3>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Login e senha não funcionam mais</strong>
+          <p>Conexão via login e senha (padrão atual do SQL Server) é insegura e não funciona com o Fabric. O acesso exige <strong>MFA/2FA</strong>.</p></div>
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">✅</span>
+          <div><strong>Sem VPN</strong>
+          <p>Com MFA, o acesso pode ser feito de qualquer lugar, sem necessidade de VPN ou desktop virtual.</p></div>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">🐍</span>
+          <div><strong>Python: usar az login</strong>
+          <p>Códigos Python que usam login/senha embutidos não funcionarão mais. Solução: executar previamente o comando <code>az login</code> para autenticação MFA antes de rodar o código Python.</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">🔮</span>
+          <div><strong>Próximo passo: login condicional</strong>
+          <p>Acesso restrito a máquinas homologadas pelo tribunal (Defender + Intune configurados) como próxima camada de segurança.</p></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="section-nav">
+      <div></div>
+      <button class="btn btn-primary" onclick="goTo('s2', document.querySelectorAll('.nav-item')[1])">Próximo: Workspaces e Arquitetura →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MÓDULO 2 · WORKSPACES, LICENCIAMENTO E ARQUITETURA
+  ══════════════════════════════════════════════ -->
+  <div id="s2" class="section">
+    <div class="section-hero">
+      <div class="day-badge">📅 Dia 1 · 16 de junho de 2026 · 10h45</div>
+      <h1>Workspaces, Licenciamento e Arquitetura</h1>
+      <p>Organização fundamental do Fabric: como funcionam os Workspaces, perfis de permissão, custos, formato de dados, integração com Git e o Catálogo do OneLake.</p>
+      <div class="meta-pills">
+        <div class="meta-pill">👨‍🏫 Prof. <strong>Eduardo</strong></div>
+        <div class="meta-pill">⏱️ Módulo <strong>2</strong> de 5</div>
+        <div class="meta-pill">🏷️ Arquitetura &amp; Organização</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Acesso ao Ambiente -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon blue">🔗</div>
+          <h3>Acesso ao Ambiente Fabric</h3>
+        </div>
+        <table class="compare-table">
+          <tr><th>URL</th><th>Descrição</th></tr>
+          <tr><td><code>app.powerbi.com</code></td><td>URL legada — funciona mas abre no Power BI</td></tr>
+          <tr><td><code>app.fabric.microsoft.com</code></td><td>Nova URL — abre diretamente no Fabric</td></tr>
+        </table>
+        <div class="alert yellow" style="margin-top:12px">
+          <span class="alert-icon">💡</span>
+          <div><strong>Dica</strong><p>Se o ambiente abrir como Power BI, altere o parâmetro <code>experience</code> na URL para <code>fabric-develop</code>. Verifique sempre o ícone no canto inferior esquerdo da tela.</p></div>
+        </div>
+      </div>
+
+      <!-- Licenciamento -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">💳</div>
+          <h3>Licenciamento</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">📋 Antes: Power BI Pro</div>
+            <p>Necessária para publicar relatórios, restrita a ~200–300 usuários do TCU.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">✅ Agora: Microsoft 365 S5</div>
+            <p>Com a contratação do M365 S5, todos os servidores do TCU têm acesso ao Fabric sem restrição.</p>
+          </div>
+          <div class="concept-item" style="grid-column: 1 / -1;">
+            <div class="concept-term">🔓 Usuários Externos: Fabric Free</div>
+            <p>Usuários externos ao tribunal (partes, auditados, colaboradores externos) receberão a licença Fabric Free para acesso.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Workspaces -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">🗂️</div>
+          <h3>Workspaces — Conceito e Organização</h3>
+        </div>
+        <div class="highlight-box">
+          <strong>Tudo no Fabric gira em torno de Workspaces.</strong> Todo item criado, salvo ou executado pertence a um workspace. Cada workspace é um <strong>servidor de banco de dados isolado</strong>, com URL de conexão própria, engine, dados e permissionamentos independentes.
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">🏢</span>
+          <div><strong>Estratégias de Organização</strong>
+          <p>• Um workspace único para a unidade, com pastas por projeto<br>
+          • Um workspace dedicado por projeto/fiscalização (recomendação do Eduardo)</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">👤</span>
+          <div><strong>"Meu Workspace" Pessoal</strong>
+          <p>Acessível somente pelo próprio usuário, sem possibilidade de compartilhar. Ideal para testes e experimentos.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Pastas não têm permissão</strong>
+          <p>Dentro do workspace, a organização é feita por pastas, mas <strong>não é possível dar permissão a nível de pasta</strong> — apenas a nível de workspace ou de objeto específico.</p></div>
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">🏛️</span>
+          <div><strong>Workspaces do Treinamento</strong>
+          <p>• <strong>Treinamento Fabric</strong> (ícone verde): gabarito — participantes são Viewers<br>
+          • <strong>Treinamento Fabric Exercícios</strong> (ícone cinza): área de exercícios — participantes são Members<br>
+          • <strong>LabContas Nuvem</strong>: bases oficiais — acesso individual por perfil SIGA</p></div>
+        </div>
+      </div>
+
+      <!-- Permissionamento -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">🔑</div>
+          <h3>Perfis de Permissão no Workspace</h3>
+        </div>
+        <table class="compare-table">
+          <tr>
+            <th>Perfil</th><th>Ler</th><th>Escrever</th><th>Compartilhar</th><th>Gerenciar</th>
+          </tr>
+          <tr>
+            <td><strong>Viewer</strong></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag red">✗</span></td>
+            <td><span class="tag red">✗</span></td>
+            <td><span class="tag red">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Member</strong></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag red">✗</span></td>
+            <td><span class="tag red">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Contributor</strong></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag red">✗</span></td>
+          </tr>
+          <tr>
+            <td><strong>Admin</strong></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag green">✓</span></td>
+            <td><span class="tag green">✓</span></td>
+          </tr>
+        </table>
+        <div class="alert yellow" style="margin-top:12px">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Permissão Viewer = acesso a TUDO</strong>
+          <p>Conceder o perfil Viewer no workspace dá acesso a <em>todas</em> as bases e seus conteúdos. Para dados restritos, conceda permissão diretamente no banco/objeto específico.</p></div>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">ℹ️</span>
+          <div><strong>Exceções</strong><p>Notebooks e bancos de dados permitem permissões individuais, independentes do perfil no workspace.</p></div>
+        </div>
+      </div>
+
+      <!-- Arquitetura: Capacidade e Armazenamento -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">⚙️</div>
+          <h3>Arquitetura: Capacidade e Armazenamento</h3>
+        </div>
+        <div class="arch-diagram">
+          <div class="arch-row">
+            <div class="arch-box">Workspace A</div>
+            <div class="arch-arrow">+</div>
+            <div class="arch-box">Workspace B</div>
+            <div class="arch-arrow">+</div>
+            <div class="arch-box">Workspace C</div>
+          </div>
+          <div class="arch-arrow" style="font-size:24px;padding:8px 0">↓</div>
+          <div class="arch-row">
+            <div class="arch-box blue">Capacidade F64<br><small style="font-weight:400;font-size:10px">64 CPUs · R$48k/mês</small></div>
+          </div>
+          <div class="arch-arrow" style="font-size:24px;padding:8px 0">↓</div>
+          <div class="arch-row">
+            <div class="arch-box teal">OneLake<br><small style="font-weight:400;font-size:10px">R$ 0,12/GB/mês · Ilimitado</small></div>
+          </div>
+          <div class="arch-label">Todos os workspaces compartilham a mesma capacidade e o mesmo storage físico</div>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">🖥️ Capacidade F64</div>
+            <p>64 CPUs na nuvem. Escala automaticamente para 128 ao atingir 100%. Custo: R$ 48k/mês. O SQL Server on-premises tem 128 cores por R$ 64k/mês em licença.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">💰 Cheque Especial</div>
+            <p>Mecanismo que permite consumo acima de 100% da capacidade por tempo limitado, com cobrança posterior — analogia ao cheque especial bancário.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">☁️ OneLake</div>
+            <p>Storage único e transversal. Custo de R$ 0,12/GB/mês, cobrado pelo armazenado. Espaço ilimitado, eliminando a restrição do LabContas on-premises.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">🔄 Escalabilidade</div>
+            <p>A nuvem permite reescalonamento dinâmico de capacidade conforme a demanda, pagando proporcionalmente pelo uso.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formato de Dados -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">📄</div>
+          <h3>Formato Delta Parquet vs SQL Database</h3>
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">✅</span>
+          <div><strong>Padrão no TCU: Delta Parquet</strong>
+          <p>O TCU optou por usar apenas bancos Delta Parquet para incentivar a migração para Spark. Lake House, Warehouse e Event House armazenam dados nesse formato aberto.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>SQL Database: evitar no TCU</strong>
+          <p>O SQL Database armazena em formato binário (similar ao SQL Server). <strong>Não suporta Spark</strong> e prende o usuário no paradigma SQL. Por isso, o TCU optou por não utilizá-lo como padrão.</p></div>
+        </div>
+        <table class="compare-table" style="margin-top:12px">
+          <tr><th>Aspecto</th><th>Delta Parquet (Lake House / Warehouse)</th><th>SQL Database</th></tr>
+          <tr><td>Formato</td><td>Parquet + Delta Log (aberto)</td><td>Binário (proprietário)</td></tr>
+          <tr><td>Leitura</td><td>SQL ou Spark</td><td>SQL apenas</td></tr>
+          <tr><td>Performance em joins</td><td><span class="tag green">Superior</span></td><td><span class="tag yellow">Normal</span></td></tr>
+          <tr><td>Busca registro único</td><td><span class="tag yellow">Mais lento</span> (usa particionamento)</td><td><span class="tag green">Rápido</span> (índices)</td></tr>
+        </table>
+      </div>
+
+      <!-- Integração Git -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">🔀</div>
+          <h3>Integração com Git / Versionamento</h3>
+        </div>
+        <div class="steps">
+          <li><strong>O que é versionado:</strong> notebooks, estruturas de banco, pipelines e outros artefatos. <em>Os dados NÃO são versionados pelo Git</em> — apenas estrutura e código.</li>
+          <li><strong>Salvamento automático:</strong> ocorre em tempo real no OneLake. O commit para o Git é uma ação separada e opcional.</li>
+          <li><strong>Colaboração simultânea:</strong> múltiplos usuários editando o mesmo notebook já é nativo. O Git serve como backup e controle de versão.</li>
+          <li><strong>Vinculação sempre na raiz:</strong> pastas não podem ser associadas individualmente a repositórios — a vinculação é sempre no nível do workspace.</li>
+          <li><strong>Branches por projeto:</strong> workspaces com múltiplos projetos e equipes podem usar branches para evitar conflitos.</li>
+        </div>
+        <div class="alert red" style="margin-top:12px">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Exclusão de workspace: 60–90 dias</strong>
+          <p>Workspace sem vínculo ao Git fica na lixeira por 90 dias após exclusão; com Git, pode ser restaurado a qualquer momento. Após o prazo, perde-se tudo: notebooks, bancos e dados do OneLake.</p></div>
+        </div>
+      </div>
+
+      <!-- Catálogo e OneLake Explorer -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon teal">🗺️</div>
+          <h3>Catálogo do OneLake &amp; OneLake Explorer</h3>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">📂</span>
+          <div><strong>Catálogo do OneLake</strong>
+          <p>Interface tipo Windows Explorer que lista todos os artefatos e bases de dados de todos os workspaces acessíveis. Permite filtrar por domínio, workspace e tipo de objeto.</p></div>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">💻</span>
+          <div><strong>OneLake Explorer (app desktop)</strong>
+          <p>Aplicativo que funciona como o OneDrive, exibindo todos os workspaces como pastas no sistema de arquivos local. Permite copiar/colar CSV para o OneLake e baixar arquivos Parquet.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Cuidado ao apagar arquivos</strong>
+          <p>Pelo OneLake Explorer é possível apagar arquivos Parquet acidentalmente, destruindo a base de dados na nuvem.</p></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="section-nav">
+      <button class="btn btn-ghost" onclick="goTo('s1', document.querySelectorAll('.nav-item')[0])">← Introdução ao Fabric</button>
+      <button class="btn btn-primary" onclick="goTo('s3', document.querySelectorAll('.nav-item')[2])">Próximo: Tipos de Armazenamento →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MÓDULO 3 · TIPOS DE ARMAZENAMENTO
+  ══════════════════════════════════════════════ -->
+  <div id="s3" class="section">
+    <div class="section-hero">
+      <div class="day-badge">📅 Dia 2 · 17 de junho de 2026 · 08h30</div>
+      <h1>Tipos de Armazenamento de Dados</h1>
+      <p>Os diferentes bancos de dados disponíveis no Fabric — Lake House, Warehouse, SQL Database e Event House — e os conceitos de Spark, PySpark, Parquet e Endpoint SQL.</p>
+      <div class="meta-pills">
+        <div class="meta-pill">👨‍🏫 Prof. <strong>Eduardo</strong></div>
+        <div class="meta-pill">⏱️ Módulo <strong>3</strong> de 5</div>
+        <div class="meta-pill">🏷️ Armazenamento &amp; Tecnologias</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Visão geral dos bancos -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">🗄️</div>
+          <h3>Os Bancos de Dados do Fabric</h3>
+        </div>
+        <table class="compare-table">
+          <tr>
+            <th>Banco</th><th>Entrada de Dados</th><th>Leitura</th><th>Formato</th><th>Visão Files</th>
+          </tr>
+          <tr>
+            <td><strong>Lake House</strong></td>
+            <td><span class="tag blue">Spark</span> (obrigatório)</td>
+            <td>Spark + SQL</td>
+            <td>Parquet / Delta</td>
+            <td><span class="tag green">Sim</span></td>
+          </tr>
+          <tr>
+            <td><strong>Warehouse</strong></td>
+            <td><span class="tag purple">SQL</span> (obrigatório)</td>
+            <td>SQL + Spark (só leitura)</td>
+            <td>Parquet (interno)</td>
+            <td><span class="tag red">Não</span></td>
+          </tr>
+          <tr>
+            <td><strong>SQL Database</strong></td>
+            <td><span class="tag purple">SQL</span></td>
+            <td>SQL + Spark (via réplica)</td>
+            <td>Binário + Réplica Parquet</td>
+            <td><span class="tag red">Não</span></td>
+          </tr>
+          <tr>
+            <td><strong>Event House</strong></td>
+            <td>Tempo real / Streaming</td>
+            <td>KQL / SQL</td>
+            <td>Índices temporais</td>
+            <td>Não</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Conceitos técnicos -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">📚</div>
+          <h3>Conceitos Técnicos Fundamentais</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">⚡ Spark</div>
+            <p>Engine de processamento distribuído — <em>não é uma linguagem</em>. Aceita Python, R, Scala e SQL como linguagens de comando. 10x mais rápido que SQL para joins e agregações massivas.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">🐍 PySpark</div>
+            <p>Python + bibliotecas que conversam com o Spark para processamento distribuído. Substitui o PowerCenter na nuvem para ETL. Usar Python puro (sem Spark) é desperdício — só usa 1 nó do cluster.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">📄 Parquet</div>
+            <p>Formato de arquivo que segmenta e particiona tabelas em múltiplos arquivos comprimidos para processamento paralelo. É um formato aberto e portável.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">📦 Delta Table</div>
+            <p>Parquet + arquivos de log de transação + metadados. É o formato correto para armazenamento de dados tabulados no Fabric. Aberto e não proprietário.</p>
+          </div>
+          <div class="concept-item" style="grid-column: 1 / -1;">
+            <div class="concept-term">🔌 Endpoint SQL</div>
+            <p>Camada SQL criada pelo Fabric sobre arquivos Parquet para permitir consultas SQL <em>sem usar Spark</em>. O endereço do endpoint é do workspace (não do banco individual). Todos os bancos (Lake House, Warehouse, SQL Database) possuem endpoint SQL.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lake House -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon blue">🏠</div>
+          <h3>Lake House — Data Lake com SQL</h3>
+        </div>
+        <div class="highlight-box">
+          O Lake House possui duas visões distintas: <strong>Files</strong> (sistema de arquivos — aceita qualquer tipo de arquivo) e <strong>Tables</strong> (interface SQL). A <strong>regra de ouro</strong>: SQL <em>só lê</em> — toda criação e inserção deve ser feita via Spark.
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>CREATE TABLE no Lake House via SQL = erro</strong>
+          <p>Ao tentar criar tabela via SQL no Lake House, retorna erro "create table was denied". Quando você faz upload de CSV pela interface, por debaixo dos panos está rodando um job Spark.</p></div>
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">✅</span>
+          <div><strong>Exercício: Criando um Lake House</strong>
+          <p>Nomenclatura padronizada: <code>login_lh_teste</code>. Upload de CSV → seção "Files" → converter para tabela Parquet em "Tables". Consultas SQL via endpoint de análise SQL.</p></div>
+        </div>
+      </div>
+
+      <!-- Warehouse -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">🏭</div>
+          <h3>Warehouse — SQL Robusto</h3>
+        </div>
+        <div class="highlight-box">
+          O Warehouse é o inverso do Lake House: <strong>SQL lê e grava</strong>, Spark <em>apenas lê</em>. Não possui partição Files — toda entrada de dados deve ser via SQL, pipeline (Data Factory) ou notebook com conexão SQL.
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Não há upload direto no Warehouse</strong>
+          <p>Warehouse não tem partição Files, não aceita upload de arquivos. Para carregar CSV: use SQL (insert), pipeline ou notebook com conexão SQL.</p></div>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">💡</span>
+          <div><strong>Notebook para carga em Warehouse</strong>
+          <p>Crie o notebook no workspace (não dentro do Warehouse). O notebook lê CSV da nuvem e insere via SQL no Warehouse.</p></div>
+        </div>
+      </div>
+
+      <!-- Event House -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">⚡</div>
+          <h3>Event House — Dados em Tempo Real</h3>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">ℹ️</span>
+          <div><strong>Banco otimizado para streaming</strong>
+          <p>Otimizado para registros em tempo real, com índices temporais. Útil para logs e eventos que chegam continuamente (ex.: monitoramento, telemetria, auditoria em tempo real).</p></div>
+        </div>
+      </div>
+
+      <!-- Boas práticas de nomenclatura -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">📝</div>
+          <h3>Boas Práticas e Pontos Críticos</h3>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Padronização de nomes — CRÍTICO</strong>
+          <p>Use apenas letras, números e underscore. <strong>Evite traços, acentos, espaços e caracteres especiais.</strong> O Spark interpreta traço como sinal de menos, causando erros. Isso é incompatível com Windows também.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Ordenação case-sensitive</strong>
+          <p>Por padrão, o Fabric cria workspaces diferenciando maiúsculas/minúsculas. O Cepim sempre altera para case-insensitive. <strong>Após a criação do banco não é possível mudar</strong> essa configuração.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>Python puro no Fabric = desperdício</strong>
+          <p>Usar Python sem bibliotecas Spark usa apenas 1 nó do cluster. Sempre use PySpark para processamento distribuído.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>Acesso remoto ao Spark: impossível da máquina local</strong>
+          <p>De máquina local, mesmo com PySpark instalado, não é possível acessar o cluster. O acesso remoto usa apenas endpoint SQL. Para usar Spark, execute notebooks dentro do Fabric.</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Bug Management Studio 22.0.0</strong>
+          <p>Versão instalada no desktop virtual novo tem bug ao conectar em workspaces onde o usuário tem permissão apenas nos bancos. Atualize para 22.1+ ou use o desktop antigo.</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">📸</span>
+          <div><strong>Snapshot é responsabilidade do usuário</strong>
+          <p>A Microsoft faz backup contra falhas, mas snapshots para restaurar cargas corrompidas devem ser criados pelo usuário.</p></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="section-nav">
+      <button class="btn btn-ghost" onclick="goTo('s2', document.querySelectorAll('.nav-item')[1])">← Workspaces e Arquitetura</button>
+      <button class="btn btn-primary" onclick="goTo('s4', document.querySelectorAll('.nav-item')[3])">Próximo: Lake House, Warehouse e SQL DB →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MÓDULO 4 · LAKE HOUSE, WAREHOUSE E SQL DATABASE (aprofundamento)
+  ══════════════════════════════════════════════ -->
+  <div id="s4" class="section">
+    <div class="section-hero">
+      <div class="day-badge">📅 Dia 2 · 17 de junho de 2026 · 10h58</div>
+      <h1>Aprofundamento: Lake House, Warehouse e SQL Database</h1>
+      <p>Diferenças práticas entre os três tipos, Shortcuts para integração de dados, conexão via Management Studio e estratégias de data quality.</p>
+      <div class="meta-pills">
+        <div class="meta-pill">👨‍🏫 Prof. <strong>Eduardo</strong></div>
+        <div class="meta-pill">⏱️ Módulo <strong>4</strong> de 5</div>
+        <div class="meta-pill">🏷️ Prático &amp; Integração</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Regras fundamentais -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">📋</div>
+          <h3>As Regras de Ouro</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">🏠 Lake House</div>
+            <p><span class="tag blue">SQL → só lê</span><br><span class="tag green">Spark → cria e grava</span><br><br>Para criar tabelas no Lake House é <strong>obrigatório usar Spark</strong>.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">🏭 Warehouse</div>
+            <p><span class="tag green">SQL → lê e grava</span><br><span class="tag yellow">Spark → só lê</span><br><br>Toda <strong>entrada de dados no Warehouse é via SQL</strong>. Sem partição Files.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">💾 SQL Database</div>
+            <p><span class="tag green">SQL → lê e grava</span><br><span class="tag yellow">Spark → via réplica Parquet</span><br><br>Permite índices personalizados. Grava em binário + réplica Parquet habilitada por padrão.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">☁️ OneLake</div>
+            <p>Storage único e transversal a todos os workspaces. A separação por workspace é <strong>apenas lógica</strong> quando se acessa via SQL — fisicamente, tudo está no mesmo lugar.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shortcuts -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon teal">🔗</div>
+          <h3>Shortcuts (Atalhos) — Integração entre Fontes</h3>
+        </div>
+        <div class="highlight-box">
+          Um <strong>Shortcut</strong> é um link criado dentro da partição Files de um Lake House para referenciar dados externos — de outro workspace, SharePoint, OneDrive, AWS, Google Cloud ou Azure Storage — <strong>sem duplicar os dados</strong>.
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Shortcuts: apenas no Lake House</strong>
+          <p>Shortcuts só podem ser criados na partição Files do Lake House (visão de arquivos). Warehouse e SQL Database não suportam shortcuts por não terem partição Files.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>Erro comum: criar shortcut na visão SQL</strong>
+          <p>Muitos tentam criar shortcut quando estão na visão SQL do Lake House. O shortcut só pode ser criado na visão Files.</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Atalho para esquema inteiro cria dbo_1, dbo_2...</strong>
+          <p>Ao criar shortcut para esquema inteiro, o sistema cria dbo_1, dbo_2, etc. Recomenda-se criar atalhos por tabela individual.</p></div>
+        </div>
+        <div class="steps">
+          <li><strong>Passo a passo para criar Shortcut para SharePoint:</strong><br>Lake House → partição Files → botão direito → "Novo Atalho" → escolher fonte (SharePoint, OneDrive, OneLake, AWS, etc.) → selecionar a pasta/tabela.</li>
+          <li><strong>Exemplo prático:</strong> Após criar shortcut para SharePoint do treinamento, os CSVs ficam acessíveis dentro dos Files. Carga do arquivo <code>consulta_candidato.csv</code> do TSE com separador ponto-e-vírgula — o sistema faz tipagem automática.</li>
+          <li><strong>Cruzamento cross-workspace:</strong> Criar shortcut para tabela de outro workspace → referenciar no seu warehouse → fazer JOIN SQL normalmente.</li>
+        </div>
+      </div>
+
+      <!-- Conexão via Management Studio -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon blue">🔌</div>
+          <h3>Conexão via Management Studio</h3>
+        </div>
+        <div class="steps">
+          <li>Obtenha o <strong>endereço do endpoint SQL</strong>: acesse o banco → engrenagem → "SQL Endpoint".</li>
+          <li>Abra o Management Studio e conecte usando o endereço copiado com autenticação <strong>MFA/2FA</strong>.</li>
+          <li>É possível conectar múltiplos workspaces simultaneamente — cada um aparece como servidor separado.</li>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">ℹ️</span>
+          <div><strong>Endereço do endpoint é do workspace, não do banco</strong>
+          <p>O endereço SQL é do workspace inteiro. Qualquer banco do workspace retorna o mesmo endereço de conexão.</p></div>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">💻</span>
+          <div><strong>Alternativa: VS Code com extensão SQL Server</strong>
+          <p>Visual Studio Code com a extensão SQL Server da Microsoft permite acesso remoto ao Fabric de forma mais leve que o Management Studio.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Workspace único = visão poluída</strong>
+          <p>Trabalhar com workspace único para múltiplos projetos dificulta a gestão. Ao conectar via Management Studio, você vê todos os bancos de todos os projetos/alunos misturados.</p></div>
+        </div>
+      </div>
+
+      <!-- Spark vs SQL -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">⚖️</div>
+          <h3>Quando usar Spark vs SQL</h3>
+        </div>
+        <table class="compare-table">
+          <tr><th>Tarefa</th><th>Ferramenta ideal</th><th>Motivo</th></tr>
+          <tr><td>Joins e agregações massivas</td><td><span class="tag blue">Spark</span></td><td>10x mais rápido, processamento distribuído</td></tr>
+          <tr><td>Busca de registro individual</td><td><span class="tag purple">SQL</span></td><td>Índices específicos por coluna</td></tr>
+          <tr><td>ETL em larga escala</td><td><span class="tag blue">PySpark</span></td><td>Substitui PowerCenter na nuvem</td></tr>
+          <tr><td>Cruzar tabelas de workspaces diferentes</td><td><span class="tag blue">Spark</span></td><td>SQL limita-se a um workspace por conexão</td></tr>
+          <tr><td>Consulta ad hoc simples</td><td><span class="tag purple">SQL</span></td><td>Mais familiar, sem overhead de cluster</td></tr>
+          <tr><td>Acesso remoto (de máquina local)</td><td><span class="tag purple">Endpoint SQL</span></td><td>Spark não é acessível remotamente</td></tr>
+        </table>
+      </div>
+
+      <!-- Data Quality -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">✅</div>
+          <h3>Estratégias de Data Quality</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">🥉 Abordagem Bronze → Silver</div>
+            <p>Carga inicial como <code>varchar</code> (sem tipagem, aceita tudo) — camada Bronze. Depois, ETL de tipagem + validação produz a camada Silver já com dados corretos.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">⚡ Tipagem Direta + Log de Erros</div>
+            <p>Tipa diretamente na carga, mas captura e registra os erros de conversão em tabela de log separada para investigação posterior.</p>
+          </div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">💡</span>
+          <div><strong>Dados devem estar na nuvem</strong>
+          <p>Notebooks rodando no Fabric não conseguem ler CSV da máquina local. É necessário fazer upload para OneDrive, SharePoint ou partição Files de um Lake House antes de processar.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Custo de rede entre nuvens</strong>
+          <p>Se dados estiverem em outra nuvem (AWS, Google), haverá penalidade grande de performance ao ler do Fabric. O ideal é manter dados na Azure para conexão local rápida.</p></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="section-nav">
+      <button class="btn btn-ghost" onclick="goTo('s3', document.querySelectorAll('.nav-item')[2])">← Tipos de Armazenamento</button>
+      <button class="btn btn-primary" onclick="goTo('s5', document.querySelectorAll('.nav-item')[4])">Próximo: Consultas e Integração →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       MÓDULO 5 · CONSULTAS SQL E INTEGRAÇÃO DE DADOS
+  ══════════════════════════════════════════════ -->
+  <div id="s5" class="section">
+    <div class="section-hero">
+      <div class="day-badge">📅 Dia 3 · 18 de junho de 2026 · 08h37</div>
+      <h1>Consultas SQL e Integração de Dados</h1>
+      <p>Três formas de consultar dados no Fabric, catálogo do OneLake, itens endossados, cruzamento cross-workspace com Shortcuts, Notebooks SQL e uso do Copilot.</p>
+      <div class="meta-pills">
+        <div class="meta-pill">👨‍🏫 Prof. <strong>Eduardo</strong></div>
+        <div class="meta-pill">⏱️ Módulo <strong>5</strong> de 5</div>
+        <div class="meta-pill">🏷️ Consultas &amp; Notebooks</div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- Três formas de consulta -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon blue">🔍</div>
+          <h3>Três Formas de Consulta SQL no Fabric</h3>
+        </div>
+        <div class="steps">
+          <li>
+            <strong>Interface Web do Endpoint SQL</strong><br>
+            Acesso direto pelo navegador ao endpoint SQL do lakehouse ou warehouse. Ideal para consultas rápidas ad hoc. Suporta Copilot para geração assistida de queries.
+          </li>
+          <li>
+            <strong>Management Studio (conexão externa)</strong><br>
+            Ferramenta desktop familiar para quem usa SQL Server. Conecte usando o endereço do endpoint SQL com autenticação MFA. Permite conectar múltiplos workspaces simultaneamente.
+          </li>
+          <li>
+            <strong>Notebooks SQL</strong><br>
+            A forma mais poderosa para fluxos de trabalho documentados. Permite agendar execução, salva histórico automaticamente, suporta visualizações e gráficos inline.
+          </li>
+        </div>
+      </div>
+
+      <!-- Catálogo do OneLake -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon teal">📖</div>
+          <h3>Catálogo do OneLake e Itens Endossados</h3>
+        </div>
+        <div class="highlight-box">
+          O <strong>Catálogo do OneLake</strong> é o elemento centralizado que lista todos os bancos publicados no Fabric — essencial para o Data Mesh funcionar. Permite encontrar bases mesmo sem ser Viewer no workspace, bastando ter permissão de leitura na base específica.
+        </div>
+        <div class="alert green">
+          <span class="alert-icon">🏅</span>
+          <div><strong>Itens Endossados</strong>
+          <p>Bancos marcados como oficiais do tribunal com carimbo de qualidade. Apenas administradores podem endossar itens. Filtrar por "Itens Endossados" é a forma mais rápida de encontrar bases do LabContas sem precisar ter viewer no workspace.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">🚫</span>
+          <div><strong>Bases ocultas sem permissão</strong>
+          <p>Se você não tiver permissão de read na base ou viewer no workspace, a base não aparece no catálogo. Use o sistema Silk para consultar bases disponíveis.</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">🌐</span>
+          <div><strong>Data Mesh</strong>
+          <p>Arquitetura onde dados compartilhados podem estar distribuídos em múltiplos workspaces, não centralizados em um único local. O Catálogo do OneLake e os Itens Endossados são os mecanismos de governança que viabilizam essa arquitetura.</p></div>
+        </div>
+      </div>
+
+      <!-- Cruzamento Cross-Workspace -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">🔀</div>
+          <h3>Cruzamento Cross-Workspace com Shortcuts</h3>
+        </div>
+        <div class="arch-diagram">
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">Fluxo do exercício prático de integração</div>
+          <div class="arch-row">
+            <div class="arch-box">BD Receita<br><small>LabContas</small></div>
+            <div class="arch-arrow">+</div>
+            <div class="arch-box blue">Candidatos TSE<br><small>Gabarito</small></div>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);padding:8px 0">↓ Shortcut no Lake House</div>
+          <div class="arch-row">
+            <div class="arch-box teal">Lake House Exercício<br><small>com Shortcuts</small></div>
+          </div>
+          <div style="font-size:12px;color:var(--text-muted);padding:8px 0">↓ JOIN SQL</div>
+          <div class="arch-row">
+            <div class="arch-box green">Warehouse<br><small>Resultado consolidado</small></div>
+          </div>
+        </div>
+        <div class="steps">
+          <li><strong>Catálogo do OneLake:</strong> filtrar "Itens Endossados" → localizar BD_Receita no LabContas Nuvem.</li>
+          <li><strong>Criar Shortcut:</strong> no Lake House (partição arquivos) → DBO → três pontinhos → "Novo atalho de tabela" → OneLake → selecionar BD Receita → escolher tabela CPF.</li>
+          <li><strong>Criar Warehouse:</strong> no mesmo workspace do exercício.</li>
+          <li><strong>JOIN SQL no Warehouse:</strong> cruzar <code>consulta_candidato</code> com tabela <code>CPF</code> via campo nome para preencher CPFs faltantes (valor -4 = ausente).</li>
+          <li><strong>Salvar resultado</strong> consolidado no Warehouse.</li>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Joins SQL limitados ao workspace</strong>
+          <p>Só é possível fazer joins entre tabelas que estão no mesmo workspace. Para cruzar com outros workspaces, é obrigatório usar shortcuts. Via Spark, não há essa limitação.</p></div>
+        </div>
+      </div>
+
+      <!-- Notebooks SQL -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">📓</div>
+          <h3>Notebooks SQL — Recursos e Cuidados</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">📋 Tipos de Notebooks</div>
+            <p>• <strong>Spark</strong>: usa cluster distribuído<br>• <strong>Python</strong>: VM única<br>• <strong>SQL</strong>: VM única<br>Podem ser híbridos, mas recomenda-se manter um tipo por notebook.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">✅ Vantagens dos Notebooks SQL</div>
+            <p>• Documenta sequência de operações<br>• Permite agendamento (schedule)<br>• Salva histórico automaticamente<br>• Suporta visualizações e gráficos<br>• My Queries → Shared Queries para compartilhar</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">📦 Recursos e Conexões</div>
+            <p>• <strong>Recursos:</strong> carrega arquivos pequenos (&lt;100MB) direto no notebook<br>• <strong>Conexões:</strong> acessa SharePoint/OneDrive/Storage com autenticação gerenciada</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">🐍 Bibliotecas Python</div>
+            <p>Três formas de adicionar:<br>1. Padrão (já incluídas)<br>2. <code>pip install</code> (bibliotecas exóticas)<br>3. Ambiente customizado pré-configurado</p>
+          </div>
+        </div>
+        <div class="alert red" style="margin-top:12px">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Notebooks salvam resultados automaticamente</strong>
+          <p>Notebooks SQL salvam resultados das consultas (até 10 mil linhas), aumentando o tamanho do arquivo. Se conectado ao GitHub, dados sensíveis (ex.: CPF) podem ser expostos acidentalmente.</p></div>
+        </div>
+      </div>
+
+      <!-- Copilot -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">🤖</div>
+          <h3>Copilot para SQL</h3>
+        </div>
+        <div class="alert blue">
+          <span class="alert-icon">💡</span>
+          <div><strong>Copilot contextualizado com a tabela aberta</strong>
+          <p>Solicite ao Copilot: "crie uma consulta para listar as dez primeiras linhas" — ele está contextualizado com os dados abertos e gera a query adequada.</p></div>
+        </div>
+        <div class="alert red">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Copilot desabilitado no LabContas</strong>
+          <p>O Copilot não está habilitado para bases do LabContas Nuvem — apenas para o workspace de exercícios.</p></div>
+        </div>
+        <div class="alert yellow">
+          <span class="alert-icon">🔒</span>
+          <div><strong>Copilot recusa campos de CPF</strong>
+          <p>O Copilot parece ter bloqueio para gerar queries com campos de CPF (possível bloqueio de dados sensíveis). Alternativa: usar o Chat TCU, que funcionou para gerar queries SQL complexas.</p></div>
+        </div>
+      </div>
+
+      <!-- Exercício TSE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">📊</div>
+          <h3>Exercício Prático: Dados do TSE (Candidatos 2024)</h3>
+        </div>
+        <table class="compare-table">
+          <tr><th>Tabela</th><th>Descrição</th><th>Chave</th></tr>
+          <tr><td><strong>consulta_candidato</strong></td><td>Dados cadastrais dos candidatos. Separador ponto-e-vírgula.</td><td>seq_candidato</td></tr>
+          <tr><td><strong>bem_candidato</strong></td><td>Bens declarados pelos candidatos.</td><td>seq_candidato</td></tr>
+          <tr><td><strong>votacao_candidato</strong></td><td>Votos recebidos por candidato.</td><td>seq_candidato</td></tr>
+        </table>
+        <div class="alert red" style="margin-top:12px">
+          <span class="alert-icon">⚠️</span>
+          <div><strong>Cuidado: duplicações por turno</strong>
+          <p>A tabela <code>consulta_candidato</code> tem duplicações por turno — o campo "situação" varia (ex.: "apto para segundo turno" vs "eleito"). Verificar documentação PDF das tabelas TSE no SharePoint do treinamento.</p></div>
+        </div>
+      </div>
+
+      <!-- Dúvidas em aberto -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon yellow">❓</div>
+          <h3>Questões para Aprofundar</h3>
+        </div>
+        <ul class="checklist">
+          <li>Verificar documentação PDF das tabelas do TSE para confirmar se seq_candidato é único entre eleições</li>
+          <li>Investigar por que Copilot recusa gerar queries com campos de CPF</li>
+          <li>Explorar modelo semântico para criar relacionamentos visuais entre tabelas do lakehouse</li>
+          <li>Conferir se SQL Server on-premises será descontinuado quando Fabric estiver totalmente implementado</li>
+          <li>Entender melhor configuração de ambientes para bibliotecas Python em notebooks</li>
+          <li>Resolver problema do AZ Login no desktop Lab Contas para autenticação 2FA no VS Code</li>
+          <li>Definir política de BDUs na nuvem: dentro do workspace Lab Contas Nuvem ou workspaces pessoais?</li>
+          <li>Diferença prática entre importar dados no Power BI vs DirectQuery com Parquet</li>
+          <li>Como configurar número de CPUs por consulta SQL (feature de junho/2026)</li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="section-nav">
+      <button class="btn btn-ghost" onclick="goTo('s4', document.querySelectorAll('.nav-item')[3])">← Lake House, Warehouse e SQL DB</button>
+      <button class="btn btn-primary" onclick="goTo('s6', document.querySelectorAll('.nav-item')[5])">Ver Resumo Geral →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       RESUMO GERAL
+  ══════════════════════════════════════════════ -->
+  <div id="s6" class="section">
+    <div class="section-hero">
+      <div class="day-badge">📚 Dias 1–3 · 16–18 de junho de 2026</div>
+      <h1>Resumo Geral do Treinamento</h1>
+      <p>Compilação das principais lições dos 3 dias de treinamento Microsoft Fabric ministrado pelo professor Eduardo.</p>
+      <div class="meta-pills">
+        <div class="meta-pill">📅 <strong>3 dias</strong> de treinamento</div>
+        <div class="meta-pill">📝 <strong>5 sessões</strong> cobertas</div>
+        <div class="meta-pill">🏛️ TCU · <strong>CEPIM/Sepin</strong></div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon purple">⭐</div>
+          <h3>As 10 Lições Mais Importantes</h3>
+        </div>
+        <div class="steps">
+          <li><strong>Workspace é a unidade fundamental do Fabric</strong> — define permissões, CPU, ordenação e conexão Git. Recomenda-se criar um workspace por projeto/auditoria para controle granular.</li>
+          <li><strong>Três tipos principais de bancos estruturados:</strong> Lake House (entrada Spark, leitura Spark/SQL), Warehouse (entrada SQL, leitura SQL/Spark) e SQL Database (SQL puro com opção Parquet).</li>
+          <li><strong>Spark vs SQL:</strong> Spark é 10x mais rápido para joins e agregações massivas. SQL é melhor para busca de registro específico com índices. Nunca use Python puro — sempre PySpark.</li>
+          <li><strong>PySpark substitui o PowerCenter</strong> na nuvem — Python + bibliotecas Spark para ETL distribuído gravando em Parquet. O código é o mesmo no Fabric e no Databricks.</li>
+          <li><strong>Acesso remoto sempre usa endpoint SQL</strong> — para processamento Spark real, execute notebooks dentro do Fabric. De máquina local, mesmo com PySpark instalado, não acessa o cluster.</li>
+          <li><strong>Permissões em dois níveis:</strong> workspace (4 perfis) ou banco a banco. Viewer no workspace = acesso a TUDO. Para dados restritos, conceda por banco.</li>
+          <li><strong>Padronização crítica:</strong> apenas letras, números e underscore. Traços, acentos e caracteres especiais causam erros no Spark e incompatibilidade com Windows.</li>
+          <li><strong>Shortcuts (Atalhos)</strong> só no Lake House (partição Files). Permitem cruzar dados entre workspaces sem duplicação. Joins SQL são limitados ao mesmo workspace — para cruzar, use shortcut.</li>
+          <li><strong>Catálogo do OneLake + Itens Endossados</strong> são a governança do Data Mesh — permitem descobrir e acessar bases de outros workspaces sem ser viewer neles.</li>
+          <li><strong>Notebooks SQL</strong> são a forma mais completa de consultar dados — documentam o fluxo, permitem agendamento, mas <em>atenção</em>: salvam resultados automaticamente, o que pode expor dados sensíveis no Git.</li>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon red">⚠️</div>
+          <h3>Armadilhas a Evitar</h3>
+        </div>
+        <div class="alert red"><span class="alert-icon">🚫</span><div><strong>Traço no nome dos objetos</strong><p>O Spark interpreta traço como operador de subtração. Use apenas underscore.</p></div></div>
+        <div class="alert red"><span class="alert-icon">🚫</span><div><strong>Case-sensitive após criação</strong><p>Não é possível alterar a ordenação do banco após sua criação. Defina case-insensitive na criação.</p></div></div>
+        <div class="alert red"><span class="alert-icon">🚫</span><div><strong>Viewer no workspace = acesso total</strong><p>Para compartilhar com acesso restrito, dê permissão diretamente no banco/objeto.</p></div></div>
+        <div class="alert red"><span class="alert-icon">🚫</span><div><strong>Notebook SQL + GitHub + dados sensíveis</strong><p>Notebooks salvam resultados (até 10k linhas). Se o workspace estiver conectado ao GitHub, dados como CPF podem ser expostos.</p></div></div>
+        <div class="alert red"><span class="alert-icon">🚫</span><div><strong>CREATE TABLE no Lake House via SQL</strong><p>Não funciona. Use Spark para criar tabelas no Lake House.</p></div></div>
+        <div class="alert red"><span class="alert-icon">🚫</span><div><strong>Shortcut na visão SQL do Lake House</strong><p>Shortcuts só podem ser criados na visão Files, nunca na visão SQL.</p></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green">✅</div>
+          <h3>Boas Práticas Consolidadas</h3>
+        </div>
+        <ul class="checklist">
+          <li>Criar um workspace por projeto/auditoria</li>
+          <li>Usar apenas letras, números e underscore nos nomes</li>
+          <li>Configurar case-insensitive na criação do banco</li>
+          <li>Fazer upload de arquivos para SharePoint/OneDrive/Files antes de processar</li>
+          <li>Criar snapshots manuais antes de cargas importantes</li>
+          <li>Conectar o workspace ao GitHub para versionamento de notebooks e estrutura</li>
+          <li>Usar PySpark (nunca Python puro) para ETL no Fabric</li>
+          <li>Criar Shortcuts por tabela individual (não por esquema inteiro)</li>
+          <li>Endossar itens oficiais no catálogo para implementar governança</li>
+          <li>Usar az login antes de scripts Python que acessam o Fabric remotamente</li>
+          <li>Manter dados na Azure para evitar penalidade de rede cross-cloud</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon blue">📚</div>
+          <h3>Certificações e Referências</h3>
+        </div>
+        <div class="concept-grid">
+          <div class="concept-item">
+            <div class="concept-term">🎓 DP-600</div>
+            <p>Certificação Microsoft de Analista de Dados no Fabric. Material disponível na biblioteca O'Reilly do tribunal.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">🎓 DP-700</div>
+            <p>Certificação Microsoft de Engenheiro de Dados no Fabric. Nível mais avançado, foco em ETL e Spark.</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">🛠️ Ferramentas</div>
+            <p>Management Studio 22.1+, VS Code + extensão SQL Server, OneLake Explorer, Chat TCU (alternativa ao Copilot).</p>
+          </div>
+          <div class="concept-item">
+            <div class="concept-term">📋 Material do Curso</div>
+            <p>PDF dos slides disponível no SharePoint do treinamento (Eduardo atualiza após cada aula). Diretório "Projeto Candidatos" com arquivos práticos.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="section-nav">
+      <button class="btn btn-ghost" onclick="goTo('s5', document.querySelectorAll('.nav-item')[4])">← Consultas e Integração</button>
+      <button class="btn btn-primary" onclick="goTo('s1', document.querySelectorAll('.nav-item')[0])">Recomeçar do Módulo 1 →</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const sections = ['s1','s2','s3','s4','s5','s6'];
+  const sectionNames = [
+    'Módulo 1 · Introdução ao Fabric',
+    'Módulo 2 · Workspaces e Arquitetura',
+    'Módulo 3 · Tipos de Armazenamento',
+    'Módulo 4 · Lake House, Warehouse e SQL DB',
+    'Módulo 5 · Consultas e Integração',
+    'Resumo Geral'
+  ];
+  const visited = new Set();
+
+  function goTo(id, navEl) {
+    sections.forEach(s => {
+      document.getElementById(s).classList.remove('active');
+    });
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    document.getElementById(id).classList.add('active');
+    if (navEl) navEl.classList.add('active');
+
+    const idx = sections.indexOf(id);
+    document.getElementById('current-section-name').textContent = sectionNames[idx] || id;
+
+    visited.add(id);
+    updateProgress();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function updateProgress() {
+    const pct = Math.round((visited.size / sections.length) * 100);
+    document.getElementById('prog-pct').textContent = pct + '%';
+    document.getElementById('prog-bar').style.width = pct + '%';
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+
+  // init
+  visited.add('s1');
+  updateProgress();
+</script>
+</body>
+</html>
